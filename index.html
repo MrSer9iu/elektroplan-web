@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ElektroPlan">
+<meta name="theme-color" content="#0F1623">
+<title>ElektroPlan</title>
+<style>
+  :root {
+    --bg: #0F1623;
+    --sidebar: #1A1F2E;
+    --border: #2D3448;
+    --text: #F9FAFB;
+    --muted: #6B7280;
+    --blue: #4FC3F7;
+    --amber: #FFB74D;
+    --green: #34D399;
+    --red: #EF5350;
+    --wall: #1F2937;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); font-family:'SF Pro Display',-apple-system,sans-serif; }
+
+  #app { display:flex; flex-direction:column; height:100%; }
+
+  /* TOP BAR */
+  #topbar {
+    height:50px; background:#0A0F1A; border-bottom:1px solid var(--border);
+    display:flex; align-items:center; padding:0 10px; gap:8px; flex-shrink:0;
+    z-index:100;
+  }
+  #menu-btn {
+    display:flex; align-items:center; gap:5px; padding:6px 10px;
+    background:linear-gradient(135deg,#4FC3F7,#0288D1); border-radius:8px;
+    border:none; color:#fff; font-size:12px; font-weight:700; cursor:pointer;
+    white-space:nowrap;
+  }
+  #menu-btn svg { width:16px; height:16px; }
+  #status-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); flex-shrink:0; }
+  #status-text { font-size:12px; color:var(--muted); flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .tb-btn {
+    width:32px; height:32px; background:#1A2035; border:none; border-radius:8px;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted);
+    flex-shrink:0;
+  }
+  .tb-btn:disabled { opacity:0.35; cursor:default; }
+  .tb-btn svg { width:16px; height:16px; }
+  .tb-sep { width:1px; height:28px; background:var(--border); flex-shrink:0; }
+  .tb-chip {
+    display:flex; align-items:center; gap:4px; padding:4px 8px;
+    background:#1A2035; border-radius:20px; font-size:10px; color:var(--muted); white-space:nowrap;
+  }
+
+  /* MAIN AREA */
+  #main { display:flex; flex:1; overflow:hidden; }
+
+  /* SIDEBAR */
+  #sidebar {
+    width:80px; background:var(--sidebar); border-right:1px solid var(--border);
+    display:flex; flex-direction:column; align-items:center; padding:8px 0;
+    overflow-y:auto; flex-shrink:0; gap:2px;
+  }
+  .s-div { width:56px; height:1px; background:var(--border); margin:4px 0; }
+  .tool-btn {
+    width:64px; padding:7px 4px; border-radius:10px; border:none;
+    background:transparent; color:var(--muted); cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    font-size:9px; transition:all .15s;
+  }
+  .tool-btn svg { width:22px; height:22px; }
+  .tool-btn.active { background:rgba(79,195,247,.15); color:var(--blue); border:1px solid rgba(79,195,247,.4); }
+  .tool-btn.active-amber { background:rgba(255,183,77,.15); color:var(--amber); border:1px solid rgba(255,183,77,.4); }
+  .tool-btn.active-green { background:rgba(52,211,153,.15); color:var(--green); border:1px solid rgba(52,211,153,.4); }
+
+  /* Thickness buttons */
+  .thick-row { display:flex; gap:4px; padding:2px 4px; }
+  .thick-btn {
+    width:20px; height:20px; border-radius:4px; border:none; background:transparent;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .thick-btn.active { background:rgba(79,195,247,.15); border:1px solid rgba(79,195,247,.4); }
+  .thick-line { background:var(--muted); border-radius:1px; width:14px; }
+  .thick-btn.active .thick-line { background:var(--blue); }
+
+  /* Color dots */
+  .color-row { display:flex; flex-wrap:wrap; gap:4px; padding:4px 8px; justify-content:center; }
+  .color-dot {
+    width:16px; height:16px; border-radius:50%; cursor:pointer; border:2px solid transparent;
+  }
+  .color-dot.active { border-color:#fff; }
+
+  /* CANVAS */
+  #canvas-wrap { flex:1; position:relative; overflow:hidden; background:#F8FAFC; }
+  #canvas { position:absolute; top:0; left:0; touch-action:none; }
+
+  /* CONTEXT MENU */
+  #ctx-menu {
+    position:fixed; background:#1E2436; border-radius:12px; padding:6px 0;
+    box-shadow:0 8px 32px rgba(0,0,0,.5); z-index:999; min-width:180px;
+    display:none; border:1px solid var(--border);
+  }
+  #ctx-menu.show { display:block; }
+  .ctx-item {
+    display:flex; align-items:center; gap:10px; padding:10px 16px;
+    font-size:13px; color:#fff; cursor:pointer; border:none; background:none; width:100%;
+  }
+  .ctx-item:hover { background:rgba(255,255,255,.05); }
+  .ctx-item.danger { color:var(--red); }
+  .ctx-item svg { width:17px; height:17px; flex-shrink:0; }
+  .ctx-sep { height:1px; background:var(--border); margin:4px 0; }
+
+  /* STATS BAR */
+  #statsbar {
+    height:46px; background:#0A0F1A; border-top:1px solid var(--border);
+    display:flex; align-items:center; padding:0 14px; gap:8px; overflow-x:auto; flex-shrink:0;
+  }
+  .stat-chip {
+    display:flex; align-items:center; gap:5px; padding:5px 10px;
+    border-radius:20px; font-size:11px; font-weight:600; white-space:nowrap; flex-shrink:0;
+  }
+  .stat-dot { width:7px; height:7px; border-radius:50%; }
+
+  /* DIALOG */
+  .overlay {
+    position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:1000;
+    display:none; align-items:center; justify-content:center;
+  }
+  .overlay.show { display:flex; }
+  .dialog {
+    background:#1E2436; border-radius:16px; padding:24px; min-width:300px; max-width:400px;
+    width:90%; border:1px solid var(--border);
+  }
+  .dialog h3 { color:#fff; font-size:18px; margin-bottom:16px; }
+  .dialog p { color:var(--muted); font-size:14px; margin-bottom:16px; }
+  .dialog label { color:var(--muted); font-size:13px; display:block; margin-bottom:8px; }
+  .dialog input {
+    width:100%; background:#111827; border:1px solid #374151; border-radius:10px;
+    padding:12px; color:#fff; font-size:22px; text-align:center; outline:none;
+  }
+  .dialog input:focus { border-color:var(--blue); }
+  .dialog-btns { display:flex; gap:8px; justify-content:flex-end; margin-top:16px; }
+  .btn-cancel { background:none; border:none; color:var(--muted); padding:8px 14px; border-radius:8px; cursor:pointer; font-size:13px; }
+  .btn-ok { background:var(--blue); border:none; color:#000; padding:8px 18px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:700; }
+  .btn-danger { background:var(--red); border:none; color:#fff; padding:8px 18px; border-radius:8px; cursor:pointer; font-size:13px; font-weight:700; }
+
+  /* DROPDOWN MENU */
+  #dropdown {
+    position:fixed; background:#1E2436; border-radius:12px; padding:6px 0;
+    box-shadow:0 8px 32px rgba(0,0,0,.6); z-index:999; min-width:200px;
+    display:none; border:1px solid var(--border); top:54px; left:10px;
+  }
+  #dropdown.show { display:block; }
+  .dd-item {
+    display:flex; align-items:center; gap:10px; padding:11px 16px;
+    font-size:13px; color:#fff; cursor:pointer; border:none; background:none; width:100%;
+  }
+  .dd-item:hover { background:rgba(255,255,255,.05); }
+  .dd-item.danger { color:var(--red); }
+  .dd-item svg { width:16px; height:16px; flex-shrink:0; }
+  .dd-sep { height:1px; background:var(--border); margin:4px 0; }
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <button id="menu-btn" onclick="toggleDropdown()">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span id="project-name-label">Neues Projekt</span>
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 10l5 5 5-5z"/></svg>
+    </button>
+    <div id="status-dot"></div>
+    <span id="status-text">← Werkzeug wählen</span>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" id="btn-undo" onclick="undo()" disabled title="Rückgängig">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v6h6"/><path d="M3 13A9 9 0 1 0 6 6.3L3 9"/></svg>
+    </button>
+    <button class="tb-btn" id="btn-redo" onclick="redo()" disabled title="Wiederholen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 7v6h-6"/><path d="M21 13A9 9 0 1 1 18 6.3L21 9"/></svg>
+    </button>
+    <div class="tb-sep"></div>
+    <button class="tb-btn" onclick="zoomIn()" title="Zoom +">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="11" y1="8" x2="11" y2="14"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    </button>
+    <button class="tb-btn" onclick="zoomOut()" title="Zoom -">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    </button>
+    <button class="tb-btn" onclick="resetView()" title="Ansicht zurücksetzen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h6v6M14 10l6.1-6.1M9 21H3v-6M10 14l-6.1 6.1"/></svg>
+    </button>
+    <div class="tb-sep"></div>
+    <div class="tb-chip">
+      <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span id="chip-walls">0 Wände</span>
+    </div>
+    <div class="tb-chip">
+      <svg viewBox="0 0 24 24" width="11" height="11" fill="currentColor"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+      <span id="chip-elems">0 Elemente</span>
+    </div>
+  </div>
+
+  <div id="main">
+    <!-- SIDEBAR -->
+    <div id="sidebar">
+      <button class="tool-btn" id="tool-wall" onclick="setTool('wall')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Wand
+      </button>
+      <button class="tool-btn" id="tool-pan" onclick="setTool('pan')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 11V6a2 2 0 00-2-2 2 2 0 00-2 2"/><path d="M14 10V4a2 2 0 00-2-2 2 2 0 00-2 2v2"/><path d="M10 10.5V6a2 2 0 00-2-2 2 2 0 00-2 2v8"/><path d="M18 11a2 2 0 114 0v3a8 8 0 01-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 012.83-2.82L7 15"/></svg>
+        Bewegen
+      </button>
+      <div class="s-div"></div>
+      <!-- Thickness -->
+      <div style="font-size:8px;color:var(--muted);letter-spacing:.8px;">WAND</div>
+      <div class="thick-row">
+        <button class="thick-btn" id="thick-thin" onclick="setThickness(2)" title="Dünn"><div class="thick-line" style="height:2px"></div></button>
+        <button class="thick-btn active" id="thick-normal" onclick="setThickness(5)" title="Normal"><div class="thick-line" style="height:4px"></div></button>
+        <button class="thick-btn" id="thick-thick" onclick="setThickness(10)" title="Dick"><div class="thick-line" style="height:8px"></div></button>
+      </div>
+      <!-- Colors -->
+      <div class="color-row">
+        <div class="color-dot active" style="background:#1F2937" onclick="setWallColor('#1F2937',this)"></div>
+        <div class="color-dot" style="background:#1D4ED8" onclick="setWallColor('#1D4ED8',this)"></div>
+        <div class="color-dot" style="background:#059669" onclick="setWallColor('#059669',this)"></div>
+        <div class="color-dot" style="background:#DC2626" onclick="setWallColor('#DC2626',this)"></div>
+        <div class="color-dot" style="background:#7C3AED" onclick="setWallColor('#7C3AED',this)"></div>
+        <div class="color-dot" style="background:#F59E0B" onclick="setWallColor('#F59E0B',this)"></div>
+      </div>
+      <div class="s-div"></div>
+      <!-- Symbols -->
+      <button class="tool-btn" id="sym-steckdose" onclick="setSymbol('steckdose')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><line x1="9" y1="8" x2="9" y2="16"/><line x1="15" y1="8" x2="15" y2="16"/></svg>
+        Steckdose
+      </button>
+      <button class="tool-btn" id="sym-schalter" onclick="setSymbol('schalter')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10" cy="14" r="5"/><line x1="10" y1="9" x2="18" y2="4"/><circle cx="18" cy="4" r="2" fill="currentColor" stroke="none"/></svg>
+        Schalter
+      </button>
+      <button class="tool-btn" id="sym-wechsel" onclick="setSymbol('wechsel')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7" cy="12" r="4"/><circle cx="17" cy="12" r="4"/><line x1="10" y1="9" x2="14" y2="6"/></svg>
+        Wechsel
+      </button>
+      <button class="tool-btn" id="sym-kreuz" onclick="setSymbol('kreuz')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="8"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>
+        Kreuz
+      </button>
+      <button class="tool-btn" id="sym-licht" onclick="setSymbol('licht')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34" x2="19.78" y2="4.22"/></svg>
+        Licht
+      </button>
+      <button class="tool-btn" id="sym-verteiler" onclick="setSymbol('verteiler')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="4" width="16" height="16" rx="1"/><line x1="8" y1="8" x2="16" y2="16"/><line x1="16" y1="8" x2="8" y2="16"/></svg>
+        Verteiler
+      </button>
+      <button class="tool-btn" id="sym-sicherung" onclick="setSymbol('sicherung')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="12" rx="1"/><line x1="7" y1="10" x2="17" y2="10"/><line x1="7" y1="14" x2="17" y2="14"/></svg>
+        Sicherung
+      </button>
+      <div class="s-div"></div>
+      <button class="tool-btn" style="color:var(--red)" onclick="confirmClear()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+        Löschen
+      </button>
+    </div>
+
+    <!-- CANVAS -->
+    <div id="canvas-wrap">
+      <canvas id="canvas"></canvas>
+    </div>
+  </div>
+
+  <!-- STATS BAR -->
+  <div id="statsbar">
+    <span style="font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.8px;white-space:nowrap;">STATISTIK:</span>
+    <div id="stats-total" class="stat-chip" style="display:none;background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.3);color:#4FC3F7;">
+      <div class="stat-dot" style="background:#4FC3F7"></div>
+      <span id="stats-total-text">0 m</span>
+    </div>
+    <div id="stats-chips"></div>
+  </div>
+</div>
+
+<!-- DROPDOWN MENU -->
+<div id="dropdown">
+  <button class="dd-item" onclick="newProject()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Neues Projekt
+  </button>
+  <button class="dd-item" onclick="saveProject()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+    Speichern
+  </button>
+  <button class="dd-item" onclick="openProject()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/></svg>
+    Öffnen
+  </button>
+  <button class="dd-item" onclick="renameProject()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+    Umbenennen
+  </button>
+  <button class="dd-item" onclick="duplicateProject()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+    Duplizieren
+  </button>
+  <div class="dd-sep"></div>
+  <button class="dd-item danger" onclick="confirmClear()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+    Alles löschen
+  </button>
+</div>
+
+<!-- CONTEXT MENU -->
+<div id="ctx-menu"></div>
+
+<!-- LENGTH DIALOG -->
+<div class="overlay" id="dlg-length">
+  <div class="dialog">
+    <h3 id="dlg-length-title">Wandlänge</h3>
+    <label>Länge in Metern:</label>
+    <input type="number" id="dlg-length-input" step="0.01" min="0.01" placeholder="z.B. 3.45">
+    <div class="dialog-btns">
+      <button class="btn-cancel" onclick="closeDlg('dlg-length')">Abbrechen</button>
+      <button class="btn-ok" onclick="confirmLength()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DIALOG -->
+<div class="overlay" id="dlg-confirm">
+  <div class="dialog">
+    <h3 id="dlg-confirm-title">Bestätigen</h3>
+    <p id="dlg-confirm-text"></p>
+    <div class="dialog-btns">
+      <button class="btn-cancel" onclick="closeDlg('dlg-confirm')">Abbrechen</button>
+      <button class="btn-danger" id="dlg-confirm-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- NAME DIALOG -->
+<div class="overlay" id="dlg-name">
+  <div class="dialog">
+    <h3 id="dlg-name-title">Projektname</h3>
+    <input type="text" id="dlg-name-input" style="font-size:16px;text-align:left;">
+    <div class="dialog-btns">
+      <button class="btn-cancel" onclick="closeDlg('dlg-name')">Abbrechen</button>
+      <button class="btn-ok" onclick="confirmName()">OK</button>
+    </div>
+  </div>
+</div>
+
+<!-- OPEN DIALOG -->
+<div class="overlay" id="dlg-open">
+  <div class="dialog" style="max-width:360px">
+    <h3>Projekt öffnen</h3>
+    <div id="dlg-open-list" style="max-height:300px;overflow-y:auto;margin:12px 0;"></div>
+    <div class="dialog-btns">
+      <button class="btn-cancel" onclick="closeDlg('dlg-open')">Abbrechen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const wrap = document.getElementById('canvas-wrap');
+
+let walls = [], symbols = [];
+let undoStack = [], redoStack = [];
+let tool = 'none', selectedSymbol = null;
+let wallThickness = 5, wallColor = '#1F2937';
+let projectName = 'Neues Projekt';
+
+// Viewport
+let vx = 0, vy = 0, vscale = 1;
+
+// Drawing
+let drawStart = null, drawCurrent = null, snappedEnd = false;
+
+// Drag
+let dragSymId = null, dragWallId = null, dragPrev = null;
+
+// Pan
+let panStart = null, panOffset = null;
+let pinchStartDist = 0, pinchStartScale = 1, pinchStartVx = 0, pinchStartVy = 0;
+let pinchMid = null;
+
+// Pending dialog callbacks
+let lengthCb = null, nameCb = null, confirmCb = null;
+
+// Symbol colors
+const SYM_COLORS = {
+  steckdose:'#2563EB', schalter:'#7C3AED', wechsel:'#7C3AED',
+  kreuz:'#7C3AED', licht:'#F59E0B', verteiler:'#059669', sicherung:'#DC2626'
+};
+const SYM_LABELS = {
+  steckdose:'Steckdose', schalter:'Schalter', wechsel:'Wechselschalter',
+  kreuz:'Kreuzschalter', licht:'Lichtpunkt', verteiler:'Verteilerdose', sicherung:'Sicherungskasten'
+};
+const SYM_SHORT = {
+  steckdose:'Steckdosen', schalter:'Schalter', wechsel:'Wechselschalter',
+  kreuz:'Kreuzschalter', licht:'Lichtpunkte', verteiler:'Verteilerdosen', sicherung:'Sicherungskästen'
+};
+const SYM_STAT_COLORS = {
+  steckdose:'#3B82F6', schalter:'#8B5CF6', wechsel:'#8B5CF6',
+  kreuz:'#8B5CF6', licht:'#F59E0B', verteiler:'#10B981', sicherung:'#EF4444'
+};
+
+// ═══════════════════════════════════════════════════
+// RESIZE
+// ═══════════════════════════════════════════════════
+function resize() {
+  canvas.width = wrap.clientWidth;
+  canvas.height = wrap.clientHeight;
+  render();
+}
+window.addEventListener('resize', resize);
+setTimeout(resize, 50);
+
+// ═══════════════════════════════════════════════════
+// COORDS
+// ═══════════════════════════════════════════════════
+function toCanvas(sx, sy) { return { x:(sx-vx)/vscale, y:(sy-vy)/vscale }; }
+function toScreen(cx, cy) { return { x:cx*vscale+vx, y:cy*vscale+vy }; }
+
+function getEventPos(e) {
+  const r = canvas.getBoundingClientRect();
+  if (e.touches && e.touches.length > 0) {
+    return { x: e.touches[0].clientX - r.left, y: e.touches[0].clientY - r.top };
+  }
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+// ═══════════════════════════════════════════════════
+// SNAPSHOT
+// ═══════════════════════════════════════════════════
+function snapshot() {
+  undoStack.push({ walls: JSON.parse(JSON.stringify(walls)), symbols: JSON.parse(JSON.stringify(symbols)) });
+  if (undoStack.length > 50) undoStack.shift();
+  redoStack = [];
+  updateUndoRedo();
+}
+function undo() {
+  if (!undoStack.length) return;
+  redoStack.push({ walls: JSON.parse(JSON.stringify(walls)), symbols: JSON.parse(JSON.stringify(symbols)) });
+  const s = undoStack.pop();
+  walls = s.walls; symbols = s.symbols;
+  updateUndoRedo(); updateStats(); render();
+}
+function redo() {
+  if (!redoStack.length) return;
+  undoStack.push({ walls: JSON.parse(JSON.stringify(walls)), symbols: JSON.parse(JSON.stringify(symbols)) });
+  const s = redoStack.pop();
+  walls = s.walls; symbols = s.symbols;
+  updateUndoRedo(); updateStats(); render();
+}
+function updateUndoRedo() {
+  document.getElementById('btn-undo').disabled = !undoStack.length;
+  document.getElementById('btn-redo').disabled = !redoStack.length;
+}
+
+// ═══════════════════════════════════════════════════
+// TOOLS
+// ═══════════════════════════════════════════════════
+function setTool(t) {
+  tool = t; selectedSymbol = null;
+  document.querySelectorAll('.tool-btn').forEach(b => {
+    b.classList.remove('active','active-amber','active-green');
+  });
+  if (t === 'wall') { document.getElementById('tool-wall').classList.add('active'); setStatus('✏️  Wand zeichnen — ziehen, dann Länge eingeben', '#4FC3F7'); }
+  else if (t === 'pan') { document.getElementById('tool-pan').classList.add('active-green'); setStatus('✋  Verschieben aktiv', '#34D399'); }
+  else setStatus('← Werkzeug wählen', '#6B7280');
+}
+function setSymbol(s) {
+  tool = 'symbol'; selectedSymbol = s;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active','active-amber','active-green'));
+  document.getElementById('sym-'+s).classList.add('active-amber');
+  setStatus('⚡  '+SYM_LABELS[s]+' platzieren', '#FFB74D');
+}
+function setStatus(text, color) {
+  document.getElementById('status-text').textContent = text;
+  document.getElementById('status-text').style.color = color;
+  document.getElementById('status-dot').style.background = color;
+}
+function setThickness(t) {
+  wallThickness = t;
+  ['thin','normal','thick'].forEach(id => document.getElementById('thick-'+id).classList.remove('active'));
+  if (t===2) document.getElementById('thick-thin').classList.add('active');
+  else if (t===5) document.getElementById('thick-normal').classList.add('active');
+  else document.getElementById('thick-thick').classList.add('active');
+}
+function setWallColor(c, el) {
+  wallColor = c;
+  document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+  el.classList.add('active');
+}
+
+// ═══════════════════════════════════════════════════
+// SNAP
+// ═══════════════════════════════════════════════════
+function snapAxis(sx, sy, ex, ey) {
+  const dx = Math.abs(ex-sx), dy = Math.abs(ey-sy);
+  return dx > dy ? { x:ex, y:sy } : { x:sx, y:ey };
+}
+function snapEndpoint(cx, cy, threshold) {
+  let best = null, minD = threshold / vscale;
+  for (const w of walls) {
+    for (const p of [{x:w.sx,y:w.sy},{x:w.ex,y:w.ey}]) {
+      const d = Math.hypot(p.x-cx, p.y-cy);
+      if (d < minD) { minD = d; best = p; }
+    }
+  }
+  return best;
+}
+function pixelsPerMeter() {
+  for (const w of walls) {
+    if (w.len && w.len > 0) {
+      const px = Math.hypot(w.ex-w.sx, w.ey-w.sy);
+      if (px > 0) return px / w.len;
+    }
+  }
+  return 80;
+}
+function hitWall(cx, cy, threshold) {
+  const t = threshold / vscale;
+  for (let i = walls.length-1; i >= 0; i--) {
+    const w = walls[i];
+    const dx = w.ex-w.sx, dy = w.ey-w.sy;
+    const len2 = dx*dx+dy*dy;
+    if (len2 === 0) continue;
+    const tval = Math.max(0, Math.min(1, ((cx-w.sx)*dx+(cy-w.sy)*dy)/len2));
+    const closest = { x:w.sx+tval*dx, y:w.sy+tval*dy };
+    if (Math.hypot(cx-closest.x, cy-closest.y) < t) return i;
+  }
+  return -1;
+}
+function hitSymbol(cx, cy, threshold) {
+  const t = threshold / vscale;
+  for (let i = symbols.length-1; i >= 0; i--) {
+    if (Math.hypot(symbols[i].x-cx, symbols[i].y-cy) < t) return i;
+  }
+  return -1;
+}
+
+// ═══════════════════════════════════════════════════
+// TOUCH / POINTER EVENTS
+// ═══════════════════════════════════════════════════
+let activePointers = {};
+
+canvas.addEventListener('touchstart', onTouchStart, { passive:false });
+canvas.addEventListener('touchmove', onTouchMove, { passive:false });
+canvas.addEventListener('touchend', onTouchEnd, { passive:false });
+canvas.addEventListener('click', onCanvasClick);
+
+function onTouchStart(e) {
+  e.preventDefault();
+  if (e.touches.length === 2) {
+    // Pinch start
+    const t1 = e.touches[0], t2 = e.touches[1];
+    const r = canvas.getBoundingClientRect();
+    pinchStartDist = Math.hypot(t1.clientX-t2.clientX, t1.clientY-t2.clientY);
+    pinchStartScale = vscale;
+    pinchStartVx = vx; pinchStartVy = vy;
+    pinchMid = { x:(t1.clientX+t2.clientX)/2-r.left, y:(t1.clientY+t2.clientY)/2-r.top };
+    dragSymId = null; dragWallId = null; drawStart = null;
+    return;
+  }
+  const r = canvas.getBoundingClientRect();
+  const sx = e.touches[0].clientX - r.left;
+  const sy = e.touches[0].clientY - r.top;
+  startInteraction(sx, sy);
+}
+function onTouchMove(e) {
+  e.preventDefault();
+  if (e.touches.length === 2) {
+    const t1 = e.touches[0], t2 = e.touches[1];
+    const r = canvas.getBoundingClientRect();
+    const dist = Math.hypot(t1.clientX-t2.clientX, t1.clientY-t2.clientY);
+    const newScale = Math.max(0.2, Math.min(8, pinchStartScale * dist / pinchStartDist));
+    const mid = { x:(t1.clientX+t2.clientX)/2-r.left, y:(t1.clientY+t2.clientY)/2-r.top };
+    const fc = { x:(pinchMid.x-pinchStartVx)/pinchStartScale, y:(pinchMid.y-pinchStartVy)/pinchStartScale };
+    vscale = newScale; vx = mid.x - fc.x*newScale; vy = mid.y - fc.y*newScale;
+    render(); return;
+  }
+  const r = canvas.getBoundingClientRect();
+  const sx = e.touches[0].clientX - r.left;
+  const sy = e.touches[0].clientY - r.top;
+  moveInteraction(sx, sy);
+}
+function onTouchEnd(e) {
+  e.preventDefault();
+  if (e.touches.length > 0) return;
+  endInteraction();
+}
+function onCanvasClick(e) {
+  const r = canvas.getBoundingClientRect();
+  const sx = e.clientX - r.left, sy = e.clientY - r.top;
+  const cp = toCanvas(sx, sy);
+  // Tap on symbol → context menu
+  const si = hitSymbol(cp.x, cp.y, 26);
+  if (si >= 0 && tool !== 'symbol' && tool !== 'wall') {
+    showSymCtxMenu(si, e.clientX, e.clientY); return;
+  }
+  // Tap on wall → context menu
+  const wi = hitWall(cp.x, cp.y, 14);
+  if (wi >= 0 && tool !== 'wall') {
+    showWallCtxMenu(wi, e.clientX, e.clientY); return;
+  }
+}
+
+function startInteraction(sx, sy) {
+  closeAllMenus();
+  const cp = toCanvas(sx, sy);
+
+  // Hit symbol
+  const si = hitSymbol(cp.x, cp.y, 28);
+  if (si >= 0) { dragSymId = si; dragPrev = cp; return; }
+
+  // Hit wall (pan/none mode)
+  if (tool === 'pan' || tool === 'none') {
+    const wi = hitWall(cp.x, cp.y, 14);
+    if (wi >= 0) { dragWallId = wi; dragPrev = cp; return; }
+  }
+
+  if (tool === 'wall') {
+    const snapped = snapEndpoint(cp.x, cp.y, 25);
+    drawStart = snapped || cp;
+    drawCurrent = drawStart; snappedEnd = false;
+    return;
+  }
+  if (tool === 'symbol' && selectedSymbol) {
+    snapshot();
+    symbols.push({ type:selectedSymbol, x:cp.x, y:cp.y, rot:0, label:true, id:Date.now() });
+    updateStats(); render(); return;
+  }
+  if (tool === 'pan') { panStart = {x:sx,y:sy}; panOffset = {x:vx,y:vy}; }
+}
+
+function moveInteraction(sx, sy) {
+  const cp = toCanvas(sx, sy);
+  if (dragSymId !== null) {
+    symbols[dragSymId].x = cp.x; symbols[dragSymId].y = cp.y;
+    dragPrev = cp; render(); return;
+  }
+  if (dragWallId !== null) {
+    const dx = cp.x - dragPrev.x, dy = cp.y - dragPrev.y;
+    walls[dragWallId].sx += dx; walls[dragWallId].sy += dy;
+    walls[dragWallId].ex += dx; walls[dragWallId].ey += dy;
+    dragPrev = cp; render(); return;
+  }
+  if (tool === 'wall' && drawStart) {
+    const ax = snapAxis(drawStart.x, drawStart.y, cp.x, cp.y);
+    const snapped = snapEndpoint(ax.x, ax.y, 25);
+    drawCurrent = snapped || ax; snappedEnd = !!snapped; render(); return;
+  }
+  if (tool === 'pan' && panStart) {
+    vx = panOffset.x + (sx - panStart.x); vy = panOffset.y + (sy - panStart.y); render(); return;
+  }
+}
+
+function endInteraction() {
+  if (dragSymId !== null) { snapshot(); dragSymId = null; dragPrev = null; updateStats(); return; }
+  if (dragWallId !== null) { snapshot(); dragWallId = null; dragPrev = null; return; }
+  if (tool === 'wall' && drawStart && drawCurrent) {
+    const dist = Math.hypot(drawCurrent.x-drawStart.x, drawCurrent.y-drawStart.y);
+    if (dist > 10 / vscale) {
+      const s = { ...drawStart }, e = { ...drawCurrent };
+      showLengthDialog('Wandlänge', '', (len) => {
+        if (len > 0) {
+          const ppm = pixelsPerMeter();
+          const d = Math.hypot(e.x-s.x, e.y-s.y);
+          const nx = d<0.001 ? 1 : (e.x-s.x)/d;
+          const ny = d<0.001 ? 0 : (e.y-s.y)/d;
+          snapshot();
+          walls.push({ sx:s.x, sy:s.y, ex:s.x+nx*len*ppm, ey:s.y+ny*len*ppm, len, thick:wallThickness, color:wallColor, id:Date.now() });
+          updateStats(); render();
+        }
+      });
+    }
+    drawStart = null; drawCurrent = null; snappedEnd = false; render();
+  }
+  panStart = null;
+}
+
+// ═══════════════════════════════════════════════════
+// ZOOM
+// ═══════════════════════════════════════════════════
+function zoomIn() { const ns = Math.min(8, vscale*1.25); vx = canvas.width/2-(canvas.width/2-vx)*ns/vscale; vy = canvas.height/2-(canvas.height/2-vy)*ns/vscale; vscale=ns; render(); }
+function zoomOut() { const ns = Math.max(0.2, vscale/1.25); vx = canvas.width/2-(canvas.width/2-vx)*ns/vscale; vy = canvas.height/2-(canvas.height/2-vy)*ns/vscale; vscale=ns; render(); }
+function resetView() { vx=0; vy=0; vscale=1; render(); }
+
+// ═══════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#F8FAFC'; ctx.fillRect(0,0,canvas.width,canvas.height);
+  drawGrid();
+  walls.forEach(w => drawWall(w, false));
+  if (dragWallId !== null) drawWall(walls[dragWallId], true);
+  if (drawStart && drawCurrent) drawPreview();
+  symbols.forEach((s,i) => drawSymbol(s, i === dragSymId));
+}
+
+function drawGrid() {
+  const step = 50 * vscale;
+  ctx.strokeStyle = 'rgba(229,231,235,0.5)'; ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  for (let x = vx%step; x < canvas.width; x += step) { ctx.moveTo(x,0); ctx.lineTo(x,canvas.height); }
+  for (let y = vy%step; y < canvas.height; y += step) { ctx.moveTo(0,y); ctx.lineTo(canvas.width,y); }
+  ctx.stroke();
+}
+
+function drawWall(w, highlight) {
+  const s = toScreen(w.sx,w.sy), e = toScreen(w.ex,w.ey);
+  ctx.strokeStyle = highlight ? '#4FC3F7' : w.color;
+  ctx.lineWidth = Math.max(2, w.thick * vscale);
+  ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(e.x,e.y); ctx.stroke();
+  // Endpoints
+  ctx.fillStyle = highlight ? '#4FC3F7' : '#6B7280';
+  const dr = Math.max(3, 5*vscale);
+  ctx.beginPath(); ctx.arc(s.x,s.y,dr,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(e.x,e.y,dr,0,Math.PI*2); ctx.fill();
+  // Label
+  if (w.len) {
+    const mx=(s.x+e.x)/2, my=(s.y+e.y)/2;
+    const fs = Math.max(10, 13*vscale);
+    const label = w.len.toFixed(2)+' m';
+    ctx.font = `bold ${fs}px -apple-system,sans-serif`;
+    const tw = ctx.measureText(label).width;
+    const isH = Math.abs(w.ex-w.sx) > Math.abs(w.ey-w.sy);
+    const lx = mx-tw/2, ly = isH ? my-8*vscale : my-fs/2;
+    ctx.fillStyle='rgba(255,255,255,0.9)'; ctx.fillRect(lx-2,ly-fs+2,tw+4,fs+2);
+    ctx.fillStyle = highlight ? '#4FC3F7' : '#1D4ED8';
+    ctx.fillText(label, lx, ly);
+  }
+}
+
+function drawPreview() {
+  const s = toScreen(drawStart.x,drawStart.y), e = toScreen(drawCurrent.x,drawCurrent.y);
+  ctx.strokeStyle='rgba(79,195,247,0.85)'; ctx.lineWidth=Math.max(2,4*vscale); ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(s.x,s.y); ctx.lineTo(e.x,e.y); ctx.stroke();
+  const dr = Math.max(4, 6*vscale);
+  ctx.fillStyle='#22C55E'; ctx.beginPath(); ctx.arc(s.x,s.y,dr,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle=snappedEnd?'#22C55E':'#4FC3F7'; ctx.beginPath(); ctx.arc(e.x,e.y,dr,0,Math.PI*2); ctx.fill();
+}
+
+function drawSymbol(sym, dragging) {
+  const p = toScreen(sym.x, sym.y);
+  const r = Math.max(12, 18*vscale);
+  const color = SYM_COLORS[sym.type];
+
+  ctx.save();
+  ctx.translate(p.x, p.y); ctx.rotate(sym.rot*Math.PI/180); ctx.translate(-p.x,-p.y);
+
+  ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle = dragging ? '#4FC3F7' : color;
+  ctx.lineWidth = Math.max(1.5, 2*vscale);
+  ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2); ctx.stroke();
+
+  drawSymIcon(ctx, sym.type, p.x, p.y, r*0.55, vscale, color);
+  ctx.restore();
+
+  if (sym.label) {
+    const fs = Math.max(8, 10*vscale);
+    ctx.font = `600 ${fs}px -apple-system,sans-serif`;
+    const label = SYM_LABELS[sym.type];
+    const tw = ctx.measureText(label).width;
+    ctx.fillStyle='rgba(255,255,255,0.85)'; ctx.fillRect(p.x-tw/2-2, p.y+r+1, tw+4, fs+2);
+    ctx.fillStyle=color; ctx.fillText(label, p.x-tw/2, p.y+r+fs+1);
+  }
+}
+
+function drawSymIcon(ctx, type, cx, cy, r, sc, color) {
+  ctx.strokeStyle=color; ctx.lineWidth=Math.max(1.2,1.8*sc); ctx.lineCap='round'; ctx.lineJoin='round';
+  ctx.fillStyle=color;
+  switch(type) {
+    case 'steckdose':
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx-r*.35,cy-r*.5); ctx.lineTo(cx-r*.35,cy+r*.5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx+r*.35,cy-r*.5); ctx.lineTo(cx+r*.35,cy+r*.5); ctx.stroke();
+      break;
+    case 'schalter':
+      ctx.beginPath(); ctx.arc(cx,cy,r*.7,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx,cy-r*.7); ctx.lineTo(cx+r*.9,cy-r*1.3); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx+r*.9,cy-r*1.3,r*.2,0,Math.PI*2); ctx.fill();
+      break;
+    case 'wechsel':
+      ctx.beginPath(); ctx.arc(cx-r*.5,cy,r*.45,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx+r*.5,cy,r*.45,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx-r*.2,cy-r*.3); ctx.lineTo(cx+r*.2,cy-r*.7); ctx.stroke();
+      break;
+    case 'kreuz':
+      ctx.beginPath(); ctx.arc(cx,cy,r*.8,0,Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx-r*.5,cy-r*.5); ctx.lineTo(cx+r*.5,cy+r*.5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx+r*.5,cy-r*.5); ctx.lineTo(cx-r*.5,cy+r*.5); ctx.stroke();
+      break;
+    case 'licht':
+      ctx.beginPath(); ctx.arc(cx,cy,r*.45,0,Math.PI*2); ctx.stroke();
+      for(let i=0;i<8;i++){const a=i*Math.PI/4;ctx.beginPath();ctx.moveTo(cx+r*.55*Math.cos(a),cy+r*.55*Math.sin(a));ctx.lineTo(cx+r*.9*Math.cos(a),cy+r*.9*Math.sin(a));ctx.stroke();}
+      break;
+    case 'verteiler':
+      ctx.strokeRect(cx-r*.7,cy-r*.7,r*1.4,r*1.4);
+      ctx.beginPath(); ctx.moveTo(cx-r*.5,cy-r*.5); ctx.lineTo(cx+r*.5,cy+r*.5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx+r*.5,cy-r*.5); ctx.lineTo(cx-r*.5,cy+r*.5); ctx.stroke();
+      break;
+    case 'sicherung':
+      ctx.strokeRect(cx-r*.8,cy-r*.6,r*1.6,r*1.2);
+      ctx.beginPath(); ctx.moveTo(cx-r*.6,cy-r*.15); ctx.lineTo(cx+r*.6,cy-r*.15); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(cx-r*.6,cy+r*.15); ctx.lineTo(cx+r*.6,cy+r*.15); ctx.stroke();
+      break;
+  }
+}
+
+// ═══════════════════════════════════════════════════
+// STATS
+// ═══════════════════════════════════════════════════
+function updateStats() {
+  document.getElementById('chip-walls').textContent = walls.length+' Wände';
+  document.getElementById('chip-elems').textContent = symbols.length+' Elemente';
+  // Total length
+  let total = 0; walls.forEach(w => total += (w.len||0));
+  const td = document.getElementById('stats-total');
+  if (total > 0) { td.style.display='flex'; document.getElementById('stats-total-text').textContent='Gesamt: '+total.toFixed(1)+' m'; }
+  else { td.style.display='none'; }
+  // Symbol counts
+  const counts = {};
+  symbols.forEach(s => counts[s.type] = (counts[s.type]||0)+1);
+  const sc = document.getElementById('stats-chips');
+  sc.innerHTML = '';
+  Object.entries(counts).forEach(([type,count]) => {
+    const c = SYM_STAT_COLORS[type];
+    const chip = document.createElement('div');
+    chip.className = 'stat-chip';
+    chip.style = `background:${c}1a;border:1px solid ${c}4d;color:${c}`;
+    chip.innerHTML = `<div class="stat-dot" style="background:${c}"></div>${SYM_SHORT[type]}: ${count}`;
+    sc.appendChild(chip);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// CONTEXT MENUS
+// ═══════════════════════════════════════════════════
+function showSymCtxMenu(idx, x, y) {
+  const menu = document.getElementById('ctx-menu');
+  const sym = symbols[idx];
+  menu.innerHTML = `
+    <button class="ctx-item" onclick="rotateSymbol(${idx});closeAllMenus()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0118.8-4.3M22 12.5a10 10 0 01-18.8 4.2"/></svg>
+      Drehen (90°)
+    </button>
+    <button class="ctx-item" onclick="duplicateSymbol(${idx});closeAllMenus()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg>
+      Duplizieren
+    </button>
+    <button class="ctx-item" onclick="toggleSymLabel(${idx});closeAllMenus()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+      ${sym.label?'Bezeichnung ausblenden':'Bezeichnung anzeigen'}
+    </button>
+    <div class="ctx-sep"></div>
+    <button class="ctx-item danger" onclick="deleteSymbol(${idx});closeAllMenus()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      Löschen
+    </button>`;
+  positionMenu(menu, x, y);
+}
+
+function showWallCtxMenu(idx, x, y) {
+  const menu = document.getElementById('ctx-menu');
+  menu.innerHTML = `
+    <button class="ctx-item" onclick="editWallLength(${idx});closeAllMenus()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+      Länge ändern
+    </button>
+    <button class="ctx-item" onclick="setWallThicknessCtx(${idx},2);closeAllMenus()">Dünn</button>
+    <button class="ctx-item" onclick="setWallThicknessCtx(${idx},5);closeAllMenus()">Normal</button>
+    <button class="ctx-item" onclick="setWallThicknessCtx(${idx},10);closeAllMenus()">Dick</button>
+    <div class="ctx-sep"></div>
+    <button class="ctx-item danger" onclick="deleteWall(${idx});closeAllMenus()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+      Löschen
+    </button>`;
+  positionMenu(menu, x, y);
+}
+
+function positionMenu(menu, x, y) {
+  menu.classList.add('show');
+  const mw=menu.offsetWidth||180, mh=menu.offsetHeight||200;
+  menu.style.left = Math.min(x, window.innerWidth-mw-8)+'px';
+  menu.style.top = Math.min(y, window.innerHeight-mh-8)+'px';
+}
+
+// Symbol actions
+function rotateSymbol(i) { snapshot(); symbols[i].rot = (symbols[i].rot+90)%360; render(); }
+function duplicateSymbol(i) { snapshot(); const s={...symbols[i],x:symbols[i].x+30,y:symbols[i].y+30,id:Date.now()}; symbols.push(s); updateStats(); render(); }
+function toggleSymLabel(i) { snapshot(); symbols[i].label=!symbols[i].label; render(); }
+function deleteSymbol(i) { snapshot(); symbols.splice(i,1); updateStats(); render(); }
+
+// Wall actions
+function editWallLength(i) {
+  const w = walls[i];
+  showLengthDialog('Länge ändern', w.len||'', (len) => {
+    if (len > 0) {
+      snapshot();
+      const d = Math.hypot(w.ex-w.sx,w.ey-w.sy);
+      const nx = d<0.001?1:(w.ex-w.sx)/d, ny = d<0.001?0:(w.ey-w.sy)/d;
+      const ppm = pixelsPerMeter();
+      walls[i].ex = w.sx+nx*len*ppm; walls[i].ey = w.sy+ny*len*ppm; walls[i].len=len;
+      updateStats(); render();
+    }
+  });
+}
+function setWallThicknessCtx(i,t) { snapshot(); walls[i].thick=t; render(); }
+function deleteWall(i) { snapshot(); walls.splice(i,1); updateStats(); render(); }
+
+// ═══════════════════════════════════════════════════
+// DIALOGS
+// ═══════════════════════════════════════════════════
+function showLengthDialog(title, defaultVal, cb) {
+  document.getElementById('dlg-length-title').textContent = title;
+  const inp = document.getElementById('dlg-length-input');
+  inp.value = defaultVal || '';
+  lengthCb = cb;
+  document.getElementById('dlg-length').classList.add('show');
+  setTimeout(() => inp.focus(), 100);
+}
+function confirmLength() {
+  const v = parseFloat(document.getElementById('dlg-length-input').value.replace(',','.'));
+  closeDlg('dlg-length');
+  if (lengthCb) { lengthCb(v||0); lengthCb=null; }
+}
+function closeDlg(id) { document.getElementById(id).classList.remove('show'); }
+
+function showNameDialog(title, def, cb) {
+  document.getElementById('dlg-name-title').textContent = title;
+  document.getElementById('dlg-name-input').value = def||'';
+  nameCb = cb;
+  document.getElementById('dlg-name').classList.add('show');
+  setTimeout(()=>document.getElementById('dlg-name-input').focus(),100);
+}
+function confirmName() {
+  const v = document.getElementById('dlg-name-input').value.trim();
+  closeDlg('dlg-name');
+  if (nameCb) { nameCb(v); nameCb=null; }
+}
+
+function showConfirmDialog(title, text, cb) {
+  document.getElementById('dlg-confirm-title').textContent = title;
+  document.getElementById('dlg-confirm-text').textContent = text;
+  confirmCb = cb;
+  document.getElementById('dlg-confirm-ok').onclick = () => { closeDlg('dlg-confirm'); if(confirmCb){confirmCb();confirmCb=null;} };
+  document.getElementById('dlg-confirm').classList.add('show');
+}
+
+// Enter key for dialogs
+document.getElementById('dlg-length-input').addEventListener('keydown', e => { if(e.key==='Enter') confirmLength(); });
+document.getElementById('dlg-name-input').addEventListener('keydown', e => { if(e.key==='Enter') confirmName(); });
+
+// ═══════════════════════════════════════════════════
+// PROJECT MENU
+// ═══════════════════════════════════════════════════
+function toggleDropdown() {
+  const d = document.getElementById('dropdown');
+  d.classList.toggle('show');
+}
+function closeAllMenus() {
+  document.getElementById('dropdown').classList.remove('show');
+  document.getElementById('ctx-menu').classList.remove('show');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('#dropdown') && !e.target.closest('#menu-btn')) {
+    document.getElementById('dropdown').classList.remove('show');
+  }
+  if (!e.target.closest('#ctx-menu')) {
+    document.getElementById('ctx-menu').classList.remove('show');
+  }
+});
+
+function newProject() {
+  closeAllMenus();
+  showConfirmDialog('Neues Projekt', 'Aktuelles Projekt verwerfen?', () => {
+    walls=[]; symbols=[]; undoStack=[]; redoStack=[];
+    projectName='Neues Projekt';
+    document.getElementById('project-name-label').textContent=projectName;
+    updateUndoRedo(); updateStats(); render();
+  });
+}
+
+function saveProject() {
+  closeAllMenus();
+  const data = { name:projectName, walls, symbols };
+  const projects = loadAllProjects();
+  const idx = projects.findIndex(p=>p.name===projectName);
+  if (idx>=0) projects[idx]=data; else projects.push(data);
+  localStorage.setItem('elektroplan_projects', JSON.stringify(projects));
+  showToast('✅ "'+projectName+'" gespeichert');
+}
+
+function openProject() {
+  closeAllMenus();
+  const projects = loadAllProjects();
+  if (!projects.length) { showToast('Keine gespeicherten Projekte'); return; }
+  const list = document.getElementById('dlg-open-list');
+  list.innerHTML = '';
+  projects.forEach((p,i) => {
+    const btn = document.createElement('button');
+    btn.style = 'width:100%;text-align:left;padding:12px;background:none;border:none;color:#fff;cursor:pointer;border-radius:8px;';
+    btn.innerHTML = `<div style="font-weight:600">${p.name}</div><div style="font-size:12px;color:#6B7280">${(p.walls||[]).length} Wände · ${(p.symbols||[]).length} Elemente</div>`;
+    btn.onmouseover = () => btn.style.background='rgba(255,255,255,.05)';
+    btn.onmouseout = () => btn.style.background='none';
+    btn.onclick = () => {
+      walls = p.walls||[]; symbols = p.symbols||[]; projectName = p.name;
+      document.getElementById('project-name-label').textContent=projectName;
+      undoStack=[]; redoStack=[];
+      updateUndoRedo(); updateStats(); render();
+      closeDlg('dlg-open');
+    };
+    list.appendChild(btn);
+  });
+  document.getElementById('dlg-open').classList.add('show');
+}
+
+function renameProject() {
+  closeAllMenus();
+  showNameDialog('Umbenennen', projectName, (name) => {
+    if (name) {
+      projectName = name;
+      document.getElementById('project-name-label').textContent=projectName;
+    }
+  });
+}
+
+function duplicateProject() {
+  closeAllMenus();
+  const newName = projectName+' (Kopie)';
+  const data = { name:newName, walls:JSON.parse(JSON.stringify(walls)), symbols:JSON.parse(JSON.stringify(symbols)) };
+  const projects = loadAllProjects();
+  projects.push(data);
+  localStorage.setItem('elektroplan_projects', JSON.stringify(projects));
+  showToast('✅ Dupliziert als "'+newName+'"');
+}
+
+function loadAllProjects() {
+  try { return JSON.parse(localStorage.getItem('elektroplan_projects')||'[]'); } catch { return []; }
+}
+
+function confirmClear() {
+  closeAllMenus();
+  showConfirmDialog('Alles löschen?', 'Alle Wände und Elemente werden gelöscht.', () => {
+    snapshot(); walls=[]; symbols=[]; updateStats(); render();
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function showToast(msg) {
+  let t = document.getElementById('toast');
+  if (!t) { t=document.createElement('div'); t.id='toast'; t.style='position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:#059669;color:#fff;padding:10px 20px;border-radius:20px;font-size:13px;z-index:9999;pointer-events:none;transition:opacity .3s'; document.body.appendChild(t); }
+  t.textContent=msg; t.style.opacity='1';
+  clearTimeout(t._t); t._t=setTimeout(()=>t.style.opacity='0',2500);
+}
+
+// Init
+updateStats();
+render();
+</script>
+</body>
+</html>
