@@ -13,17 +13,57 @@
 
   const SYMBOL_META = {
     steckdose: { label: 'Steckdose', color: '#22C55E', cat: 'power' },
-    schalter: { label: 'Ausschalter', color: '#22C55E', cat: 'power' },
+    steckdose_double: { label: 'Doppelsteckdose', color: '#22C55E', cat: 'power' },
+    schalter: { label: 'Schalter', color: '#22C55E', cat: 'power' },
     wechsel: { label: 'Wechselschalter', color: '#22C55E', cat: 'power' },
     kreuz: { label: 'Kreuzschalter', color: '#22C55E', cat: 'power' },
     taster: { label: 'Taster', color: '#22C55E', cat: 'power' },
     verteiler: { label: 'Verteilerdose', color: '#22C55E', cat: 'power' },
     sicherung: { label: 'Sicherungskasten', color: '#22C55E', cat: 'power' },
-    data: { label: 'Datensteckdose', color: '#22C55E', cat: 'power' },
-    licht: { label: 'Lichtpunkt', color: '#EF5350', cat: 'light' },
-    leuchte: { label: 'Leuchte', color: '#EF5350', cat: 'light' },
+    data: { label: 'Datendose', color: '#22C55E', cat: 'power' },
+    datendose: { label: 'Datendose', color: '#22C55E', cat: 'power' },
+    rauchmelder: { label: 'Rauchmelder', color: '#EF5350', cat: 'light' },
+    bewegungsmelder: { label: 'Bewegungsmelder', color: '#EF5350', cat: 'light' },
+    decke: { label: 'Lampe', color: '#EF5350', cat: 'light' },
+    licht: { label: 'Lampe', color: '#EF5350', cat: 'light' },
+    leuchte: { label: 'Lampe', color: '#EF5350', cat: 'light' },
     spot: { label: 'Taster m. Leuchte', color: '#EF5350', cat: 'light' },
+    motor_jalousie: { label: 'Motor Jalousie', color: '#22C55E', cat: 'power' },
   };
+
+  const icons = {
+    steckdose: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" stroke="black" stroke-width="2" fill="none"/><line x1="40" y1="35" x2="40" y2="65" stroke="black" stroke-width="2"/><line x1="60" y1="35" x2="60" y2="65" stroke="black" stroke-width="2"/></svg>',
+    schalter: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" stroke="black" stroke-width="2" fill="none"/><line x1="50" y1="50" x2="70" y2="30" stroke="black" stroke-width="2"/></svg>',
+    wechsel: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" stroke="black" stroke-width="2" fill="none"/><line x1="45" y1="45" x2="70" y2="30" stroke="black" stroke-width="2"/><line x1="55" y1="55" x2="30" y2="70" stroke="black" stroke-width="2"/></svg>',
+    kreuz: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" stroke="black" stroke-width="2" fill="none"/><line x1="30" y1="30" x2="70" y2="70" stroke="black" stroke-width="2"/><line x1="70" y1="30" x2="30" y2="70" stroke="black" stroke-width="2"/></svg>',
+    datendose: '<svg viewBox="0 0 100 100"><rect x="20" y="20" width="60" height="60" stroke="black" stroke-width="2" fill="none"/><line x1="30" y1="70" x2="70" y2="30" stroke="black" stroke-width="2"/></svg>',
+    rauchmelder: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="35" stroke="black" stroke-width="2" fill="none"/><circle cx="50" cy="50" r="6" fill="black"/></svg>',
+    bewegungsmelder: '<svg viewBox="0 0 100 100"><path d="M25 50 A25 25 0 0 1 75 50" stroke="black" stroke-width="2" fill="none"/><line x1="50" y1="50" x2="50" y2="80" stroke="black" stroke-width="2"/></svg>',
+    lampe: '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="5" fill="black"/><line x1="50" y1="10" x2="50" y2="90" stroke="black" stroke-width="2"/><line x1="10" y1="50" x2="90" y2="50" stroke="black" stroke-width="2"/></svg>',
+    motor_jalousie: '<svg viewBox="0 0 100 100"><rect x="20" y="25" width="60" height="50" stroke="black" stroke-width="2" fill="none"/><line x1="30" y1="40" x2="70" y2="40" stroke="black" stroke-width="2"/><line x1="30" y1="50" x2="70" y2="50" stroke="black" stroke-width="2"/><line x1="30" y1="60" x2="70" y2="60" stroke="black" stroke-width="2"/></svg>',
+  };
+
+  const iconAliases = {
+    data: 'datendose',
+    datendose: 'datendose',
+    decke: 'lampe',
+    licht: 'lampe',
+    leuchte: 'lampe',
+    spot: 'lampe',
+    steckdose_double: 'steckdose',
+    'motor jalousie': 'motor_jalousie',
+    motor_jalousie: 'motor_jalousie',
+  };
+
+  const NON_SNAPPING_TYPES = new Set(['rauchmelder', 'lampe', 'decke', 'licht', 'leuchte', 'spot', 'bewegungsmelder', 'motor jalousie', 'motor_jalousie']);
+  const svgImageCache = new Map();
+
+  const EXTRA_SYMBOL_TOOLS = [
+    { id: 'sy-rauchmelder', tool: 'rauchmelder' },
+    { id: 'sy-bewegungsmelder', tool: 'bewegungsmelder' },
+    { id: 'sy-lampe', tool: 'lampe' },
+    { id: 'sy-motor_jalousie', tool: 'motor_jalousie' },
+  ];
 
   const EXTRA_TOOLS = [
     { id: 'to-door', label: 'Tür', tool: 'door', color: '#4FC3F7' },
@@ -42,6 +82,9 @@
   let drag = null;
   let activeDialog = null;
   let dialogAction = null;
+  let lengthDialogState = null;
+  const activePointers = new Map();
+  let pinchState = null;
 
   function createProject() {
     return { scale: 80, grid: GRID, walls: [], elements: [], openings: [] };
@@ -82,6 +125,7 @@
         x: item.x ?? 0,
         y: item.y ?? 0,
         rot: item.rot || 0,
+        rotationOffset: item.rotationOffset || 0,
         label: item.label || (SYMBOL_META[type]?.label || type),
         attachedWallId: item.attachedWallId || null,
         wallOffset: item.wallOffset ?? 0.5,
@@ -95,6 +139,8 @@
       wallId: item.wallId || null,
       offset: clamp(item.offset ?? 0.5, 0, 1),
       width: item.width || OPENING_DEFAULT[item.type === 'window' ? 'window' : 'door'],
+      rotation: item.rotation || 0,
+      flip: item.flip || 1,
     }));
     next.elements.forEach(syncElementAttachment);
     next.openings.forEach(syncOpening);
@@ -160,6 +206,39 @@
     return { x, y, rot: Math.atan2(g.dy, g.dx) };
   }
 
+  function quantizeQuarterTurn(angle) {
+    return Math.round(angle / (Math.PI / 2)) * (Math.PI / 2);
+  }
+
+  function planCentroid() {
+    const points = [];
+    for (const wall of project.walls) {
+      points.push({ x: wall.ax, y: wall.ay }, { x: wall.bx, y: wall.by });
+    }
+    if (!points.length) return { x: 0, y: 0 };
+    return {
+      x: points.reduce((sum, point) => sum + point.x, 0) / points.length,
+      y: points.reduce((sum, point) => sum + point.y, 0) / points.length,
+    };
+  }
+
+  function inferInteriorSide(wall) {
+    const g = wallGeom(wall);
+    const center = { x: (wall.ax + wall.bx) / 2, y: (wall.ay + wall.by) / 2 };
+    const centroid = planCentroid();
+    const positive = { x: center.x + g.nx * ELEMENT_OFFSET, y: center.y + g.ny * ELEMENT_OFFSET };
+    const negative = { x: center.x - g.nx * ELEMENT_OFFSET, y: center.y - g.ny * ELEMENT_OFFSET };
+    const positiveDist = Math.hypot(positive.x - centroid.x, positive.y - centroid.y);
+    const negativeDist = Math.hypot(negative.x - centroid.x, negative.y - centroid.y);
+    return positiveDist <= negativeDist ? 1 : -1;
+  }
+
+  function autoRotationForWall(wall, side, rotationOffset = 0) {
+    const g = wallGeom(wall);
+    const angle = quantizeQuarterTurn(Math.atan2(g.ny * side, g.nx * side));
+    return angle + rotationOffset * (Math.PI / 2);
+  }
+
   function syncElementAttachment(element) {
     if (!element.attachedWallId) return;
     const wall = project.walls.find((item) => item.id === element.attachedWallId);
@@ -170,7 +249,7 @@
     const pos = positionOnWall(wall, element.wallOffset, element.wallSide, element.wallDistance);
     element.x = pos.x;
     element.y = pos.y;
-    element.rot = pos.rot;
+    element.rot = autoRotationForWall(wall, element.wallSide, element.rotationOffset || 0);
   }
 
   function syncOpening(opening) {
@@ -186,6 +265,118 @@
   function syncAllAttachments() {
     project.elements.forEach(syncElementAttachment);
     project.openings.forEach(syncOpening);
+  }
+
+  function wallLength(wall) {
+    return Math.hypot(wall.bx - wall.ax, wall.by - wall.ay);
+  }
+
+  function setWallLength(wall, lengthMeters) {
+    const g = wallGeom(wall);
+    wall.bx = wall.ax + g.ux * lengthMeters;
+    wall.by = wall.ay + g.uy * lengthMeters;
+  }
+
+  function screenThresholdToWorld(px) {
+    return px / (project.scale * view.zoom);
+  }
+
+  function existingEndpoints(excludeWallId = null, excludeHandle = null) {
+    const points = [];
+    for (const wall of project.walls) {
+      if (!(wall.id === excludeWallId && excludeHandle === 'a')) points.push({ wallId: wall.id, key: 'a', x: wall.ax, y: wall.ay });
+      if (!(wall.id === excludeWallId && excludeHandle === 'b')) points.push({ wallId: wall.id, key: 'b', x: wall.bx, y: wall.by });
+    }
+    return points;
+  }
+
+  function snapToExistingNode(point, excludeWallId = null, excludeHandle = null) {
+    const threshold = screenThresholdToWorld(10);
+    let best = null;
+    for (const node of existingEndpoints(excludeWallId, excludeHandle)) {
+      const dist = Math.hypot(point.x - node.x, point.y - node.y);
+      if (dist <= threshold && (!best || dist < best.dist)) best = { ...node, dist };
+    }
+    return best ? { x: best.x, y: best.y, node: best } : point;
+  }
+
+  function buildTopology() {
+    const threshold = screenThresholdToWorld(10);
+    const endpoints = [];
+    for (const wall of project.walls) {
+      endpoints.push({ wallId: wall.id, key: 'a', x: wall.ax, y: wall.ay });
+      endpoints.push({ wallId: wall.id, key: 'b', x: wall.bx, y: wall.by });
+    }
+    const clusters = [];
+    for (const point of endpoints) {
+      let cluster = clusters.find((item) => Math.hypot(item.x - point.x, item.y - point.y) <= threshold);
+      if (!cluster) {
+        cluster = { id: 'node-' + clusters.length, x: point.x, y: point.y, points: [] };
+        clusters.push(cluster);
+      }
+      cluster.points.push(point);
+      cluster.x = cluster.points.reduce((sum, item) => sum + item.x, 0) / cluster.points.length;
+      cluster.y = cluster.points.reduce((sum, item) => sum + item.y, 0) / cluster.points.length;
+    }
+    const pointMap = new Map();
+    clusters.forEach((cluster) => cluster.points.forEach((point) => pointMap.set(point.wallId + ':' + point.key, cluster.id)));
+    const adjacency = new Map();
+    clusters.forEach((cluster) => adjacency.set(cluster.id, new Set()));
+    project.walls.forEach((wall) => {
+      const a = pointMap.get(wall.id + ':a');
+      const b = pointMap.get(wall.id + ':b');
+      if (!a || !b) return;
+      adjacency.get(a).add(b);
+      adjacency.get(b).add(a);
+    });
+    const isEdgeInCycle = (start, end) => {
+      const queue = [start];
+      const seen = new Set([start]);
+      while (queue.length) {
+        const node = queue.shift();
+        for (const next of adjacency.get(node) || []) {
+          if ((node === start && next === end) || (node === end && next === start)) continue;
+          if (next === end) return true;
+          if (!seen.has(next)) {
+            seen.add(next);
+            queue.push(next);
+          }
+        }
+      }
+      return false;
+    };
+    const cycleWalls = new Set();
+    project.walls.forEach((wall) => {
+      const a = pointMap.get(wall.id + ':a');
+      const b = pointMap.get(wall.id + ':b');
+      if (a && b && a !== b && isEdgeInCycle(a, b)) cycleWalls.add(wall.id);
+    });
+    return { clusters, pointMap, cycleWalls };
+  }
+
+  function showWallLengthDialog(wallId) {
+    const wall = project.walls.find((item) => item.id === wallId);
+    if (!wall) return;
+    lengthDialogState = { wallId };
+    document.getElementById('dlent').textContent = 'Wandlänge';
+    document.getElementById('dleni').value = wallLength(wall).toFixed(2);
+    showDialog('dlen');
+  }
+
+  function pointerCenter(a, b) {
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+  }
+
+  function screenDistance(a, b) {
+    return Math.hypot(a.x - b.x, a.y - b.y);
+  }
+
+  function zoomAt(screenX, screenY, factor) {
+    const before = screenToWorld(screenX, screenY);
+    view.zoom = clamp(view.zoom * factor, 0.35, 4);
+    const after = worldToScreen(before.x, before.y);
+    view.x += screenX - after.x;
+    view.y += screenY - after.y;
   }
 
   function resizeCanvas() {
@@ -232,16 +423,48 @@
   }
 
   function drawWalls() {
+    const topology = buildTopology();
     for (const wall of project.walls) {
       const a = worldToScreen(wall.ax, wall.ay);
       const b = worldToScreen(wall.bx, wall.by);
+      const lengthMeters = wallLength(wall);
+      const midX = (a.x + b.x) / 2;
+      const midY = (a.y + b.y) / 2;
       ctx.save();
       ctx.strokeStyle = wall.color;
       ctx.lineCap = 'round';
-      ctx.lineWidth = Math.max(4, wall.thick * project.scale * view.zoom);
+      const widthFactor = topology.cycleWalls.has(wall.id) ? 1.75 : 1;
+      ctx.lineWidth = Math.max(4, wall.thick * project.scale * view.zoom * widthFactor);
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
       ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      ctx.fillStyle = '#0F172A';
+      ctx.strokeStyle = '#E5E7EB';
+      ctx.lineWidth = 1.5;
+      ctx.font = '12px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const label = `${lengthMeters.toFixed(2)} m`;
+      const metrics = ctx.measureText(label);
+      ctx.beginPath();
+      ctx.roundRect(midX - metrics.width / 2 - 6, midY - 10, metrics.width + 12, 20, 6);
+      ctx.fill();
+      ctx.stroke();
+      ctx.fillStyle = '#E5E7EB';
+      ctx.fillText(label, midX, midY + 0.5);
+      ctx.restore();
+    }
+    for (const cluster of topology.clusters) {
+      const p = worldToScreen(cluster.x, cluster.y);
+      const isClosed = cluster.points.length > 1;
+      ctx.save();
+      ctx.fillStyle = isClosed ? '#22C55E' : '#EF4444';
+      ctx.strokeStyle = '#0F172A';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+      ctx.fill();
       ctx.stroke();
       ctx.restore();
     }
@@ -253,8 +476,12 @@
     const g = wallGeom(wall);
     const center = positionOnWall(wall, opening.offset, 1, 0);
     const half = opening.width / 2;
+    const baseAngle = Math.atan2(g.dy, g.dx);
     return {
       g,
+      wall,
+      angle: baseAngle + ((opening.rotation || 0) * Math.PI / 2),
+      flip: opening.flip || 1,
       center: worldToScreen(center.x, center.y),
       start: worldToScreen(center.x - g.ux * half, center.y - g.uy * half),
       end: worldToScreen(center.x + g.ux * half, center.y + g.uy * half),
@@ -275,11 +502,11 @@
         ctx.lineTo(pts.end.x, pts.end.y);
         ctx.stroke();
         const r = Math.hypot(pts.center.x - pts.start.x, pts.center.y - pts.start.y);
-        const startAng = Math.atan2(pts.start.y - pts.center.y, pts.start.x - pts.center.x);
+        const startAng = pts.angle + (opening.flip < 0 ? Math.PI : 0);
         ctx.strokeStyle = 'rgba(37,99,235,.45)';
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.arc(pts.center.x, pts.center.y, r, startAng, startAng + Math.PI / 2);
+        ctx.arc(pts.center.x, pts.center.y, r, startAng, startAng + (Math.PI / 2) * opening.flip);
         ctx.stroke();
       } else {
         ctx.strokeStyle = '#0EA5E9';
@@ -354,134 +581,25 @@
   }
 
   function drawElementIcon(target, type, color) {
-    target.save();
-    target.strokeStyle = color;
-    target.fillStyle = color;
-    target.lineWidth = 2;
-    target.lineCap = 'round';
-    target.lineJoin = 'round';
-    switch (type) {
-      case 'steckdose':
-        target.beginPath();
-        target.arc(0, 0, 11, 0, Math.PI * 2);
-        target.stroke();
-        target.beginPath();
-        target.moveTo(-4, -3);
-        target.lineTo(-4, 3);
-        target.moveTo(4, -3);
-        target.lineTo(4, 3);
-        target.stroke();
-        break;
-      case 'schalter':
-        target.beginPath();
-        target.arc(0, 0, 11, 0, Math.PI * 2);
-        target.stroke();
-        target.beginPath();
-        target.moveTo(0, 0);
-        target.lineTo(8, -8);
-        target.stroke();
-        target.beginPath();
-        target.arc(8, -8, 2, 0, Math.PI * 2);
-        target.fill();
-        break;
-      case 'wechsel':
-        target.beginPath();
-        target.arc(0, 0, 11, 0, Math.PI * 2);
-        target.stroke();
-        target.beginPath();
-        target.moveTo(-3, 3);
-        target.lineTo(8, -8);
-        target.moveTo(3, 3);
-        target.lineTo(8, -2);
-        target.stroke();
-        break;
-      case 'kreuz':
-        target.beginPath();
-        target.rect(-11, -11, 22, 22);
-        target.stroke();
-        target.beginPath();
-        target.moveTo(-7, -7);
-        target.lineTo(7, 7);
-        target.moveTo(7, -7);
-        target.lineTo(-7, 7);
-        target.stroke();
-        break;
-      case 'taster':
-        target.beginPath();
-        target.arc(0, 0, 11, 0, Math.PI * 2);
-        target.stroke();
-        target.beginPath();
-        target.moveTo(-5, 0);
-        target.lineTo(5, 0);
-        target.stroke();
-        break;
-      case 'verteiler':
-        target.beginPath();
-        target.rect(-11, -11, 22, 22);
-        target.stroke();
-        target.beginPath();
-        target.moveTo(-6, -6);
-        target.lineTo(6, 6);
-        target.moveTo(6, -6);
-        target.lineTo(-6, 6);
-        target.stroke();
-        break;
-      case 'sicherung':
-        target.beginPath();
-        target.rect(-11, -8, 22, 16);
-        target.stroke();
-        target.beginPath();
-        target.moveTo(-7, -3);
-        target.lineTo(7, -3);
-        target.moveTo(-7, 0);
-        target.lineTo(7, 0);
-        target.moveTo(-7, 3);
-        target.lineTo(7, 3);
-        target.stroke();
-        break;
-      case 'data':
-        target.beginPath();
-        target.moveTo(0, -10);
-        target.lineTo(0, 4);
-        target.moveTo(-8, 4);
-        target.lineTo(8, 4);
-        target.moveTo(-8, 8);
-        target.lineTo(8, 8);
-        target.stroke();
-        break;
-      case 'licht':
-        target.beginPath();
-        target.arc(0, 0, 7, 0, Math.PI * 2);
-        target.stroke();
-        for (let i = 0; i < 8; i++) {
-          const a = i * Math.PI / 4;
-          target.beginPath();
-          target.moveTo(Math.cos(a) * 10, Math.sin(a) * 10);
-          target.lineTo(Math.cos(a) * 15, Math.sin(a) * 15);
-          target.stroke();
-        }
-        break;
-      case 'leuchte':
-        target.beginPath();
-        target.arc(0, 0, 11, 0, Math.PI * 2);
-        target.stroke();
-        target.beginPath();
-        target.moveTo(-7, -7);
-        target.lineTo(7, 7);
-        target.moveTo(7, -7);
-        target.lineTo(-7, 7);
-        target.stroke();
-        break;
-      case 'spot':
-        target.beginPath();
-        target.arc(0, 0, 11, 0, Math.PI * 2);
-        target.stroke();
-        target.beginPath();
-        target.arc(0, 0, 4, 0, Math.PI * 2);
-        target.fill();
-        break;
+    const iconKey = iconAliases[type] || type;
+    const svg = icons[iconKey];
+    if (!svg) return;
+    let cached = svgImageCache.get(iconKey);
+    if (!cached) {
+      const viewBoxMatch = svg.match(/viewBox="([\d.\s-]+)"/);
+      const [, , width = '100', height = '100'] = viewBoxMatch ? viewBoxMatch[1].split(/\s+/) : ['0', '0', '100', '100'];
+      const image = new Image();
+      image.onload = () => renderAll();
+      image.src = `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+      cached = { image, width: Number(width), height: Number(height) };
+      svgImageCache.set(iconKey, cached);
     }
-    target.restore();
+    if (!cached.image.complete) return;
+    const base = 28;
+    const aspect = cached.width / cached.height;
+    const drawW = aspect >= 1 ? base : base * aspect;
+    const drawH = aspect >= 1 ? base / aspect : base;
+    target.drawImage(cached.image, -drawW / 2, -drawH / 2, drawW, drawH);
   }
 
   function svgMarkup(type, color = '#22C55E') {
@@ -640,6 +758,12 @@
   }
 
   function attachElementToNearestWall(element, point) {
+    if (NON_SNAPPING_TYPES.has(element.type)) {
+      element.attachedWallId = null;
+      element.x = point.x;
+      element.y = point.y;
+      return;
+    }
     const nearest = nearestWall(point);
     if (!nearest || nearest.distPx >= WALL_SNAP_PX) {
       element.attachedWallId = null;
@@ -649,7 +773,7 @@
     }
     element.attachedWallId = nearest.wall.id;
     element.wallOffset = nearest.hit.t;
-    element.wallSide = nearest.hit.signed >= 0 ? 1 : -1;
+    element.wallSide = inferInteriorSide(nearest.wall);
     element.wallDistance = ELEMENT_OFFSET;
     syncElementAttachment(element);
   }
@@ -657,6 +781,30 @@
   function pointerPos(event) {
     const rect = canvas.getBoundingClientRect();
     return screenToWorld(event.clientX - rect.left, event.clientY - rect.top);
+  }
+
+  function cachePointer(event) {
+    const rect = canvas.getBoundingClientRect();
+    activePointers.set(event.pointerId, { x: event.clientX - rect.left, y: event.clientY - rect.top, type: event.pointerType });
+  }
+
+  function removePointer(event) {
+    activePointers.delete(event.pointerId);
+    if (activePointers.size < 2) pinchState = null;
+  }
+
+  function maybeStartPinch() {
+    if (activePointers.size !== 2) return false;
+    const [a, b] = [...activePointers.values()];
+    pinchState = {
+      distance: screenDistance(a, b),
+      center: pointerCenter(a, b),
+      viewX: view.x,
+      viewY: view.y,
+      zoom: view.zoom,
+    };
+    drag = null;
+    return true;
   }
 
   function selectHit(point) {
@@ -675,9 +823,13 @@
   }
 
   function onPointerDown(event) {
+    cachePointer(event);
+    if (maybeStartPinch()) return;
     if (event.button === 2) return;
     canvas.setPointerCapture(event.pointerId);
-    const point = snapPoint(pointerPos(event), currentTool !== 'pan');
+    const point = currentTool === 'wall'
+      ? snapToExistingNode(snapPoint(pointerPos(event), true))
+      : snapPoint(pointerPos(event), currentTool !== 'pan');
     closeContext();
     const handle = hitWallHandle(point);
     if (handle) {
@@ -689,10 +841,10 @@
         draftWall = { ax: point.x, ay: point.y, bx: point.x, by: point.y };
         setStatus('Wandpunkt setzen', '#4FC3F7');
       } else {
-        const next = snapPoint(pointerPos(event), true);
+        const next = snapToExistingNode(snapPoint(pointerPos(event), true));
         if (Math.hypot(next.x - draftWall.ax, next.y - draftWall.ay) >= 0.1) {
           snapshot();
-          project.walls.push({
+          const wall = {
             id: uid('wall'),
             ax: draftWall.ax,
             ay: draftWall.ay,
@@ -700,11 +852,14 @@
             by: next.y,
             thick: wallStyle.thick,
             color: wallStyle.color,
-          });
+          };
+          project.walls.push(wall);
+          selected = { type: 'wall', id: wall.id };
           draftWall = null;
           syncAllAttachments();
           renderAll();
           setStatus('Wand erstellt', '#22C55E');
+          showWallLengthDialog(wall.id);
         }
       }
       return;
@@ -719,6 +874,8 @@
           wallId: nearest.wall.id,
           offset: nearest.hit.t,
           width: OPENING_DEFAULT[currentTool],
+          rotation: 0,
+          flip: 1,
         };
         syncOpening(opening);
         project.openings.push(opening);
@@ -735,6 +892,7 @@
         x: point.x,
         y: point.y,
         rot: 0,
+        rotationOffset: 0,
         label: SYMBOL_META[currentTool].label,
         attachedWallId: null,
         wallOffset: 0.5,
@@ -766,11 +924,26 @@
   }
 
   function onPointerMove(event) {
+    cachePointer(event);
+    if (activePointers.size === 2 && pinchState) {
+      const [a, b] = [...activePointers.values()];
+      const center = pointerCenter(a, b);
+      const dist = Math.max(1, screenDistance(a, b));
+      view.zoom = pinchState.zoom;
+      view.x = pinchState.viewX;
+      view.y = pinchState.viewY;
+      zoomAt(pinchState.center.x, pinchState.center.y, dist / Math.max(1, pinchState.distance));
+      view.x += center.x - pinchState.center.x;
+      view.y += center.y - pinchState.center.y;
+      renderAll();
+      return;
+    }
     const rawPoint = pointerPos(event);
     const point = snapPoint(rawPoint, currentTool !== 'pan');
     if (draftWall) {
-      draftWall.bx = point.x;
-      draftWall.by = point.y;
+      const snapped = snapToExistingNode(point);
+      draftWall.bx = snapped.x;
+      draftWall.by = snapped.y;
       renderAll();
     }
     if (!drag) return;
@@ -783,12 +956,13 @@
     if (drag.kind === 'wall-handle') {
       const wall = project.walls.find((item) => item.id === drag.wallId);
       if (!wall) return;
+      const snapped = snapToExistingNode(point, drag.wallId, drag.handle);
       if (drag.handle === 'a') {
-        wall.ax = point.x;
-        wall.ay = point.y;
+        wall.ax = snapped.x;
+        wall.ay = snapped.y;
       } else {
-        wall.bx = point.x;
-        wall.by = point.y;
+        wall.bx = snapped.x;
+        wall.by = snapped.y;
       }
       syncAllAttachments();
       renderAll();
@@ -836,6 +1010,11 @@
     drag = null;
   }
 
+  function onPointerEnd(event) {
+    removePointer(event);
+    drag = null;
+  }
+
   function showContext(event) {
     event.preventDefault();
     const point = pointerPos(event);
@@ -850,20 +1029,49 @@
     del.className = 'ci d';
     del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>Löschen';
     del.onclick = () => { closeContext(); deleteSelected(); };
+    if (selected.type === 'wall') {
+      const len = document.createElement('button');
+      len.className = 'ci';
+      len.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12h16"/><path d="M8 8l-4 4 4 4"/><path d="M16 8l4 4-4 4"/></svg>Länge bearbeiten';
+      len.onclick = () => {
+        closeContext();
+        showWallLengthDialog(selected.id);
+      };
+      menu.appendChild(len);
+    }
     menu.appendChild(del);
     if (selected.type === 'element') {
       const rot = document.createElement('button');
       rot.className = 'ci';
       rot.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 3 3 9 9 9"/></svg>Drehen';
       rot.onclick = () => {
-        const el = project.elements.find((item) => item.id === selected.id);
-        if (!el) return;
-        snapshot();
-        el.rot += Math.PI / 2;
-        renderAll();
+        rotateSelection();
         closeContext();
       };
       menu.appendChild(rot);
+    }
+    if (selected.type === 'opening') {
+      const rotOpen = document.createElement('button');
+      rotOpen.className = 'ci';
+      rotOpen.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 3 3 9 9 9"/></svg>90° drehen';
+      rotOpen.onclick = () => {
+        rotateSelection();
+        closeContext();
+      };
+      menu.appendChild(rotOpen);
+
+      const flipOpen = document.createElement('button');
+      flipOpen.className = 'ci';
+      flipOpen.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 7h10v10"/><path d="M17 7L7 17"/></svg>Öffnung spiegeln';
+      flipOpen.onclick = () => {
+        const opening = project.openings.find((item) => item.id === selected.id);
+        if (!opening) return;
+        snapshot();
+        opening.flip = (opening.flip || 1) * -1;
+        renderAll();
+        closeContext();
+      };
+      menu.appendChild(flipOpen);
     }
     menu.style.left = event.clientX + 'px';
     menu.style.top = event.clientY + 'px';
@@ -900,6 +1108,29 @@
 
   function updateProjectLabel() {
     document.getElementById('plbl').textContent = projectName;
+  }
+
+  function rotateSelection() {
+    if (!selected) return;
+    snapshot();
+    if (selected.type === 'element') {
+      const element = project.elements.find((item) => item.id === selected.id);
+      if (!element) return;
+      if (element.attachedWallId) {
+        element.rotationOffset = ((element.rotationOffset || 0) + 1) % 4;
+        syncElementAttachment(element);
+      } else {
+        element.rot += Math.PI / 2;
+      }
+      renderAll();
+      return;
+    }
+    if (selected.type === 'opening') {
+      const opening = project.openings.find((item) => item.id === selected.id);
+      if (!opening) return;
+      opening.rotation = ((opening.rotation || 0) + 1) % 4;
+      renderAll();
+    }
   }
 
   function allProjects() {
@@ -980,6 +1211,18 @@
       btn.onclick = () => window.setTool(item.tool);
       clearBtn.parentNode.insertBefore(btn, clearBtn);
     });
+    EXTRA_SYMBOL_TOOLS.forEach((item) => {
+      if (document.getElementById(item.id)) return;
+      const btn = document.createElement('button');
+      const meta = SYMBOL_META[item.tool];
+      const raw = icons[iconAliases[item.tool] || item.tool];
+      const svg = raw.replaceAll('stroke="black"', 'stroke="currentColor"').replaceAll('fill="black"', 'fill="currentColor"');
+      btn.className = 'tb';
+      btn.id = item.id;
+      btn.innerHTML = `${svg}${meta.label}`;
+      btn.onclick = () => window.setTool(item.tool);
+      clearBtn.parentNode.insertBefore(btn, clearBtn);
+    });
     if (!document.getElementById('export-pdf')) {
       const exportBtn = document.createElement('button');
       exportBtn.id = 'export-pdf';
@@ -994,7 +1237,12 @@
     Object.entries(SYMBOL_META).forEach(([type, meta]) => {
       const button = document.getElementById(`sy-${type}`);
       if (!button) return;
-      button.innerHTML = `${svgMarkup(type, meta.color)}${meta.label}`;
+      const iconKey = iconAliases[type] || type;
+      const raw = icons[iconKey];
+      const svg = raw
+        ? raw.replaceAll('stroke="black"', 'stroke="currentColor"').replaceAll('fill="black"', 'fill="currentColor"')
+        : svgMarkup(type, meta.color);
+      button.innerHTML = `${svg}${meta.label}`;
     });
   }
 
@@ -1098,7 +1346,18 @@
     hideDialog('dname');
     if (typeof dialogAction === 'function') dialogAction(value);
   };
-  window.okLen = function okLen() { hideDialog('dlen'); };
+  window.okLen = function okLen() {
+    const value = Number(document.getElementById('dleni').value);
+    hideDialog('dlen');
+    if (!lengthDialogState || !Number.isFinite(value) || value <= 0) return;
+    const wall = project.walls.find((item) => item.id === lengthDialogState.wallId);
+    lengthDialogState = null;
+    if (!wall) return;
+    snapshot();
+    setWallLength(wall, value);
+    syncAllAttachments();
+    renderAll();
+  };
 
   document.getElementById('dconfok').onclick = () => {
     hideDialog('dconf');
@@ -1107,16 +1366,12 @@
 
   canvas.addEventListener('pointerdown', onPointerDown);
   canvas.addEventListener('pointermove', onPointerMove);
-  canvas.addEventListener('pointerup', onPointerUp);
-  canvas.addEventListener('pointercancel', onPointerUp);
+  canvas.addEventListener('pointerup', onPointerEnd);
+  canvas.addEventListener('pointercancel', onPointerEnd);
   canvas.addEventListener('contextmenu', showContext);
   canvas.addEventListener('wheel', (event) => {
     event.preventDefault();
-    const before = screenToWorld(event.offsetX, event.offsetY);
-    view.zoom = clamp(view.zoom * (event.deltaY < 0 ? 1.1 : 0.9), 0.35, 4);
-    const after = worldToScreen(before.x, before.y);
-    view.x += event.offsetX - after.x;
-    view.y += event.offsetY - after.y;
+    zoomAt(event.offsetX, event.offsetY, event.deltaY < 0 ? 1.1 : 0.9);
     renderAll();
   }, { passive: false });
 
@@ -1129,6 +1384,12 @@
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') {
       event.preventDefault();
       window.redo();
+      return;
+    }
+    if (!event.ctrlKey && !event.metaKey && event.key.toLowerCase() === 'r') {
+      if (activeDialog) return;
+      event.preventDefault();
+      rotateSelection();
       return;
     }
     if (event.key === 'Delete' || event.key === 'Backspace') {
